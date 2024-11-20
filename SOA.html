@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statement of Account</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('NDSCP.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 100px auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .search-bar {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .search-bar input {
+            width: calc(100% - 120px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .search-bar button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total {
+            font-weight: bold;
+            color: #007BFF;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Notre Dame Siena College of Polomolok</h1>
+        <h3><center>Statement of Account</center></h3>
+        <div class="search-bar">
+            <input type="text" id="student-name-input" placeholder="Enter student name..." />
+            <button id="search-button">Search</button>
+        </div>
+        <div class="password-bar hidden">
+            <input type="password" id="password-input" placeholder="Enter password..." />
+            <button id="verify-button">Verify</button>
+        </div>
+        <div class="soa-info hidden">
+            <p>Student Name: <span id="student-name"></span></p>
+            <p>Student ID: <span id="student-id-display">[Display Student ID Here]</span></p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount (₱)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tuition Fee</td>
+                        <td id="tuition-fee">₱0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Other Fees</td>
+                        <td id="other-fees">₱0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Miscellaneous Fees</td>
+                        <td id="misc-fees">₱0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Total Assessment</td>
+                        <td id="total-assessment">₱0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Down Payment</td>
+                        <td id="down-payment">₱0.00</td>
+                    </tr>
+                    <tr>
+                        <td>Amount to be Paid for Every Exam</td>
+                        <td id="exam-amount">₱0.00</td>
+                    </tr>
+                    <tr class="total">
+                        <td>Total Amount</td>
+                        <td id="total-amount">₱0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDMdXp00iA-dpIob0jA6bIrpb42X1atWus",
+            authDomain: "fir-firestore-4a196.firebaseapp.com",
+            projectId: "fir-firestore-4a196",
+            storageBucket: "fir-firestore-4a196.appspot.com",
+            messagingSenderId: "55908652697",
+            appId: "1:55908652697:web:5f7ed66061c9daae544a08",
+            measurementId: "G-ZXVRX62MQ2"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let studentData = null;
+
+        window.searchStudent = async function() {
+            const studentName = document.getElementById("student-name-input").value;
+            const q = query(collection(db, "students"), where("name", "==", studentName));
+            const querySnapshot = await getDocs(q);
+
+            if (!querySnapshot.empty) {
+                querySnapshot.forEach((doc) => {
+                    studentData = doc.data();
+                    studentData.id = doc.id;
+                });
+                document.querySelector('.password-bar').classList.remove('hidden');
+            } else {
+                alert("No student found with that name!");
+            }
+        }
+
+        window.verifyPassword = function() {
+            const password = document.getElementById("password-input").value;
+            if (studentData && studentData.password === password) {
+                document.getElementById("student-name").innerText = studentData.name;
+                document.getElementById("student-id-display").innerText = studentData.id;
+                document.getElementById("tuition-fee").innerText = `₱${studentData.tuitionFee}`;
+                document.getElementById("other-fees").innerText = `₱${studentData.otherFees}`;
+                document.getElementById("misc-fees").innerText = `₱${studentData.miscellaneousFees}`;
+                document.getElementById("total-assessment").innerText = `₱${studentData.totalAssessment}`;
+                document.getElementById("down-payment").innerText = `₱${studentData.downPayment}`;
+                document.getElementById("exam-amount").innerText = `₱${studentData.examPayment}`;
+                document.getElementById("total-amount").innerText = `₱${studentData.balance}`;
+                document.querySelector('.soa-info').classList.remove('hidden');
+            } else {
+                alert("Incorrect password!");
+            }
+        }
+
+        document.getElementById("search-button").onclick = searchStudent;
+        document.getElementById("verify-button").onclick = verifyPassword;
+    </script>
+</body>
+</html>
